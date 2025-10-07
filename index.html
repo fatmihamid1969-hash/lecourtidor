@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>لو كورتييه دوري - وكالة عقارية بمستغانم</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="logo.png" />
+</head>
+<body>
+  <!-- الهيدر -->
+  <header>
+    <img src="logo.png" alt="شعار الوكالة" class="logo"/>
+    <h1>لو كورتييه دوري <span>- وكالة عقارية بمستغانم</span></h1>
+  </header>
+
+  <!-- شريط الإجراءات -->
+  <div class="action-bar">
+    <a id="add-property-btn" class="add-property-btn" target="_blank">
+      <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg" alt="GitHub"/>
+      أضف إعلانك عبر GitHub
+    </a>
+    <a class="contact-link" href="https://wa.me/213557913512" target="_blank">تواصل مع الوكالة عبر الواتساب</a>
+  </div>
+
+  <!-- العقارات -->
+  <section class="properties-section">
+    <h2>العقارات المعروضة</h2>
+    <div id="properties-list" class="properties-grid">
+      <!-- البطاقات تظهر هنا -->
+    </div>
+  </section>
+
+  <!-- زر واتساب للزبائن الذين لا يملكون حساب GitHub -->
+  <section style="text-align:center;margin-top:36px;">
+    <p style="color:#b89146;font-size:1.08rem;font-weight:600;">
+      إذا لم يكن لديك حساب GitHub أو تفضل التواصل السريع، أرسل تفاصيل عقارك وصوره مباشرة عبر الواتساب وسنقوم بنشره لك:
+    </p>
+    <a href="https://wa.me/213557913512?text=السلام%20عليكم،%20أرغب%20في%20إضافة%20عقار%20إلى%20الموقع.%20الرجاء%20التواصل%20معي." target="_blank" class="property-contact-btn" style="background:#25d366;color:#111;font-weight:bold;font-size:1.1rem;display:inline-flex;align-items:center;padding:10px 24px;border-radius:24px;text-decoration:none;margin:18px 0;">
+      <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/whatsapp.svg" alt="واتساب" style="width:26px;height:26px;margin-left:10px;"/>
+      راسلنا عبر واتساب لإضافة عقارك
+    </a>
+  </section>
+
+  <script src="main.js"></script>
+</body>
+</html>
