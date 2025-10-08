@@ -21,7 +21,8 @@ h1 {color:#b89146; margin-top:10px; font-size:22px; letter-spacing:1px;}
 .properties {margin:40px 20px; display:flex; flex-wrap:wrap; justify-content:center; gap:20px;}
 .property-card {background:#111; border:2px solid #b89146; border-radius:10px; width:300px; overflow:hidden; transition:transform 0.3s, background 0.3s;}
 .property-card:hover {transform:scale(1.05); background:#222;}
-.property-image {width:100%; height:180px; object-fit:cover;}
+.property-images {display:flex; gap:4px; overflow-x:auto; margin-bottom:5px;}
+.property-image {width:100%; max-width:120px; height:80px; object-fit:cover; border-radius:4px;}
 .property-info {padding:15px; text-align:left;}
 .property-info h3 {margin:0; color:#b89146; font-size:20px;}
 .property-info p {margin:5px 0; font-size:16px; color:#fff;}
@@ -29,8 +30,10 @@ h1 {color:#b89146; margin-top:10px; font-size:22px; letter-spacing:1px;}
 .property-info .contact-btn {display:inline-block; margin-top:10px; padding:8px 15px; border:2px solid #b89146; border-radius:8px; color:#b89146; text-decoration:none; font-weight:600; transition:all 0.3s;}
 .property-info .contact-btn:hover {background:#b89146; color:#000; transform:scale(1.05);}
 footer {border-top:2px solid #b89146; padding:15px; font-size:14px; color:#b89146;}
-form input {padding:8px; width:80%; margin:5px 0; border-radius:5px; border:none;}
+form input, form label {padding:8px; width:80%; margin:5px 0; border-radius:5px; border:none;}
 form button {margin-top:10px;}
+#images-preview {margin:10px auto; display:flex; gap:6px; justify-content:center; max-width:90%; flex-wrap:wrap;}
+#images-preview img {max-width:100px; max-height:80px; border-radius:5px; border:1px solid #b89146;}
 @media(max-width:600px){ h1{font-size:18px;} .contact{font-size:16px;} .btn{padding:8px 16px;} .property-card{width:90%;} }
 </style>
 </head>
@@ -53,11 +56,14 @@ form button {margin-top:10px;}
 
 <section class="add-property">
 <h2 style="color:#b89146;">Ajouter une propriété</h2>
-<form id="propertyForm">
+<form id="propertyForm" autocomplete="off">
 <input type="text" id="title" placeholder="Titre de la propriété" required><br>
 <input type="text" id="desc" placeholder="Description (Quartier, chambres...)" required><br>
-<input type="text" id="price" placeholder="Prix en DA" required><br>
-<input type="text" id="image" placeholder="Lien de l'image (ex: https://...)" required><br>
+<input type="text" id="price" placeholder="Prix en DA"><br>
+<label style="color:#b89146;text-align:left;display:block;margin-top:10px;">Télécharger plusieurs images :</label>
+<input type="file" id="imageFiles" accept="image/*" multiple><br>
+<input type="text" id="images" placeholder="Liens des images séparés par virgule (https://... , https://... )"><br>
+<div id="images-preview"></div>
 <button type="submit" class="btn">Ajouter la propriété</button>
 </form>
 </section>
@@ -67,6 +73,43 @@ form button {margin-top:10px;}
 <script>
 // تخزين العقارات محليا في المتصفح فقط
 const container = document.getElementById('properties');
+const imageInput = document.getElementById('imageFiles');
+const imageUrlInput = document.getElementById('images');
+const imagesPreview = document.getElementById('images-preview');
+
+// معاينة الصور المختارة من الجهاز
+imageInput.addEventListener('change', function(e) {
+  imagesPreview.innerHTML = '';
+  const files = Array.from(e.target.files);
+  if(files.length) {
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const img = document.createElement('img');
+        img.src = ev.target.result;
+        imagesPreview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+    imageUrlInput.value = '';
+  }
+});
+
+// معاينة الصور من الروابط
+imageUrlInput.addEventListener('input', function() {
+  imagesPreview.innerHTML = '';
+  if(this.value) {
+    const urls = this.value.split(',').map(url=>url.trim()).filter(Boolean);
+    urls.forEach(url => {
+      if(url.startsWith('http')) {
+        const img = document.createElement('img');
+        img.src = url;
+        imagesPreview.appendChild(img);
+      }
+    });
+    imageInput.value = '';
+  }
+});
 
 // تحميل العقارات من LocalStorage
 function loadProperties() {
@@ -75,12 +118,16 @@ function loadProperties() {
   properties.forEach((p, idx) => {
     const card = document.createElement('div');
     card.className = "property-card";
+    let imagesHtml = '';
+    if(Array.isArray(p.images) && p.images.length > 0) {
+      imagesHtml = `<div class="property-images">${p.images.map(src=>`<img src="${src}" class="property-image" alt="photo">`).join('')}</div>`;
+    }
     card.innerHTML = `
-      <img src="${p.image}" class="property-image" alt="${p.title}">
+      ${imagesHtml}
       <div class="property-info">
         <h3>${p.title}</h3>
         <p>${p.desc}</p>
-        <p class="price">Prix : ${p.price}</p>
+        ${p.price ? `<p class="price">Prix : ${p.price}</p>` : ''}
         <a href="https://wa.me/213557913512" class="contact-btn" target="_blank">📱 Contacter</a>
         <button onclick="deleteProperty(${idx})" style="margin-top:10px;background:#222;color:#b89146;border:1px solid #b89146;border-radius:4px;cursor:pointer;">Supprimer</button>
       </div>`;
@@ -106,14 +153,48 @@ document.getElementById('propertyForm').addEventListener('submit', (e)=>{
   const title = document.getElementById('title').value;
   const desc = document.getElementById('desc').value;
   const price = document.getElementById('price').value;
-  const image = document.getElementById('image').value;
+  let images = [];
+
+  // معالجة الصور المرفوعة
+  const files = Array.from(imageInput.files);
+  if(files.length > 0) {
+    const readers = [];
+    files.forEach(file => {
+      const reader = new FileReader();
+      readers.push(new Promise((resolve) => {
+        reader.onload = function(ev) {
+          images.push(ev.target.result);
+          resolve();
+        };
+        reader.readAsDataURL(file);
+      }));
+    });
+    Promise.all(readers).then(() => {
+      saveProperty({title, desc, price, images});
+    });
+    return;
+  }
+
+  // معالجة الصور من الروابط
+  if(imageUrlInput.value) {
+    images = imageUrlInput.value.split(',').map(url=>url.trim()).filter(Boolean);
+    saveProperty({title, desc, price, images});
+    return;
+  }
+
+  // لا صور
+  saveProperty({title, desc, price, images});
+});
+
+function saveProperty(property) {
   const properties = JSON.parse(localStorage.getItem('properties') || "[]");
-  properties.push({title, desc, price, image});
+  properties.push(property);
   localStorage.setItem('properties', JSON.stringify(properties));
   document.getElementById('propertyForm').reset();
+  imagesPreview.innerHTML = '';
   alert("Votre propriété a été ajoutée!");
   loadProperties();
-});
+}
 </script>
 
 </body>
