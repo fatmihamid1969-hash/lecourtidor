@@ -64,28 +64,15 @@ form button {margin-top:10px;}
 
 <footer>© 2025 Le Courtier Doré - Tous droits réservés</footer>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-// إعداد Firebase (استبدل بالقيم الخاصة بك)
-const firebaseConfig = {
-  apiKey: "API_KEY_HERE",
-  authDomain: "PROJECT_ID.firebaseapp.com",
-  projectId: "PROJECT_ID",
-  storageBucket: "PROJECT_ID.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// تحميل العقارات عند فتح الموقع
+// تخزين العقارات محليا في المتصفح فقط
 const container = document.getElementById('properties');
-db.collection("properties").orderBy("title").onSnapshot((snapshot)=>{
+
+// تحميل العقارات من LocalStorage
+function loadProperties() {
   container.innerHTML = "";
-  snapshot.forEach(doc => {
-    const p = doc.data();
+  const properties = JSON.parse(localStorage.getItem('properties') || "[]");
+  properties.forEach((p, idx) => {
     const card = document.createElement('div');
     card.className = "property-card";
     card.innerHTML = `
@@ -95,10 +82,23 @@ db.collection("properties").orderBy("title").onSnapshot((snapshot)=>{
         <p>${p.desc}</p>
         <p class="price">Prix : ${p.price}</p>
         <a href="https://wa.me/213557913512" class="contact-btn" target="_blank">📱 Contacter</a>
+        <button onclick="deleteProperty(${idx})" style="margin-top:10px;background:#222;color:#b89146;border:1px solid #b89146;border-radius:4px;cursor:pointer;">Supprimer</button>
       </div>`;
     container.appendChild(card);
   });
-});
+}
+
+// حذف عقار
+function deleteProperty(idx) {
+  if(confirm('Voulez-vous vraiment supprimer cette propriété ?')) {
+    const properties = JSON.parse(localStorage.getItem('properties') || "[]");
+    properties.splice(idx, 1);
+    localStorage.setItem('properties', JSON.stringify(properties));
+    loadProperties();
+  }
+}
+
+loadProperties();
 
 // إضافة عقار جديد من الزبون
 document.getElementById('propertyForm').addEventListener('submit', (e)=>{
@@ -107,11 +107,14 @@ document.getElementById('propertyForm').addEventListener('submit', (e)=>{
   const desc = document.getElementById('desc').value;
   const price = document.getElementById('price').value;
   const image = document.getElementById('image').value;
-  db.collection("properties").add({title, desc, price, image});
+  const properties = JSON.parse(localStorage.getItem('properties') || "[]");
+  properties.push({title, desc, price, image});
+  localStorage.setItem('properties', JSON.stringify(properties));
   document.getElementById('propertyForm').reset();
   alert("Votre propriété a été ajoutée!");
+  loadProperties();
 });
 </script>
 
 </body>
-                                                                                         </html>
+</html>
